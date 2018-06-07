@@ -9,12 +9,20 @@ IPAddress    apIP(42, 42, 42, 42);  // Defining a static IP address: local & gat
 const char *ssid = "ESP8266";
 const char *password = "hellojeff123";
 
+const int lux_pin = 13;
+const int dip_sw_state = 12;
+const int dip_sw_result = 14;
+const int pot_in = 16;
+const int sound_in  = 4;
+
+int lux;
+int dip_state;
+int dip_res;
+int pot;
+int sound;
+
 // Define a web server at port 80 for HTTP
 ESP8266WebServer server(80);
-
-const int ledPin = D1; // an LED is connected to NodeMCU pin D1 (ESP8266 GPIO5) via a 1K Ohm resistor
-
-bool ledState = false;
 
 //void handleRoot() {
 //  
@@ -30,28 +38,18 @@ void finish (void){
   Serial.println("finish");
 }
 
-void handleNotFound() {
-  digitalWrite ( LED_BUILTIN, 0 );
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += ( server.method() == HTTP_GET ) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-
-  for ( uint8_t i = 0; i < server.args(); i++ ) {
-    message += " " + server.argName ( i ) + ": " + server.arg ( i ) + "\n";
-  }
-
-  server.send ( 404, "text/plain", message );
-  digitalWrite ( LED_BUILTIN, 1 ); //turn the built in LED on pin DO of NodeMCU off
+void handleNotFound(void) {
+  server.send ( 404, "text/plain", "404" );
 }
 
 void setup() {
+  
+  pinMode(lux_pin, INPUT_PULLUP);
+  pinMode(dip_sw_state, INPUT_PULLUP);
+  pinMode(dip_sw_result, INPUT_PULLUP);
+  pinMode(pot_in, INPUT_PULLUP);
+  pinMode(sound_in, INPUT_PULLUP);
   pinMode ( ledPin, OUTPUT );
-  digitalWrite ( ledPin, 0 );
   
   delay(1000);
   Serial.begin(115200);
@@ -72,9 +70,9 @@ void setup() {
   server.on ( "/", start );
   server.on ( "/start", start);
   server.on ( "/stop", finish);
-  server.on ( "/inline", []() {
-    server.send ( 200, "text/plain", "this works as well" );
-  } );
+//  server.on ( "/inline", []() {
+//    server.send ( 200, "text/plain", "this works as well" );
+//  } );
   server.onNotFound ( handleNotFound );
   
   server.begin();
